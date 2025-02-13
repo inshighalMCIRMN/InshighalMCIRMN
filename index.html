@@ -32,7 +32,7 @@
             left:30;
         }
 
-/* تقليل حجم العناوين */
+        /* تقليل حجم العناوين */
         header h1 {
             font-size: 16px;
         }
@@ -71,6 +71,7 @@
            cursor: pointer;
            margin-top: 5px;
         }
+
         /* تنسيق الفورم */
         .form-container {
             background: rgba(255, 255, 255, 0.85); /* خلفية بيضاء شفافة */
@@ -116,6 +117,14 @@
         button:hover {
             background-color: #088e78;
         }
+
+        /* إخفاء رسالة النجاح بشكل افتراضي */
+        .success-message {
+            display: none;
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -131,13 +140,7 @@
 
     <!-- الفورم -->
     <div class="form-container">
-<Questions>
-</Questions>
-</Question>
-<Questions>
-</Questions>
-</Question>
-<form action="https://getform.io/f/amdkpngb" method="POST" enctype="multipart/form-data">
+        <form id="complaintForm" action="https://getform.io/f/amdkpngb" method="POST" enctype="multipart/form-data">
             <label for="fullName">الاسم واللقب:</label>
             <input type="text" id="fullName" name="fullName" placeholder="أدخل اسمك ولقبك" required>
 
@@ -208,6 +211,7 @@
                 <option value="56">جانت</option>
                 <option value="57">المغير</option>
                 <option value="58">المنيعة</option>
+            </select>
     
             <label for="municipality">البلدية:</label>
             <input type="text" id="municipality" name="municipality" placeholder="أدخل بلديتك" required>
@@ -227,6 +231,19 @@
         // جعل الصورة قابلة للنقر للاتصال بالرقم 1020 مباشرةً
         document.getElementById('callImage').addEventListener('click', function () {
             window.location.href = 'tel:1020';
+        });
+
+        // عرض رسالة النجاح بعد إرسال النموذج
+        document.getElementById('complaintForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // منع إرسال النموذج الافتراضي
+
+            // عرض رسالة النجاح
+            document.getElementById('successMessage').style.display = 'block';
+
+            // إرسال النموذج برمجيًا
+            setTimeout(function () {
+                document.getElementById('complaintForm').submit();
+            }, 2000); // تأخير الإرسال لرؤية الرسالة
         });
     </script>
 
