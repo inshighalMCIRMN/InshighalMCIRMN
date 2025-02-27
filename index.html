@@ -22,8 +22,8 @@
         header {
             background-color: rgba(0, 0, 0, 0.6);
             color: white;
-            padding: 10px 5px;
-            width: 90%;
+            padding: 5px; /* تقليل الـ padding لجعل الهيدر أصغر رأسيًا */
+            width: 90%; /* يمكن تغييره إلى قيمة أخرى إذا أردت */
             text-align: center;
             position: fixed;
             top: 0;
@@ -34,17 +34,11 @@
         header h3 { font-size: 14px; }
         header p { font-size: 12px; margin: 5px 0; }
         @media (max-width: 768px) {
-            header { padding: 6px 2px; }
+            header { padding: 3px; /* تقليل أكثر على الشاشات الصغيرة */ }
             header h1 { font-size: 16px; }
             header h2 { font-size: 15px; }
             header h3 { font-size: 14px; }
             header p { font-size: 12px; }
-        }
-        .call-image {
-           width: 120px;
-           height: 70px;
-           cursor: pointer;
-           margin-top: 5px;
         }
         .form-container {
             background: rgba(255, 255, 255, 0.85);
@@ -53,7 +47,7 @@
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
             width: 70%;
             max-width: 250px;
-            margin-top: 240px;
+            margin-top: 150px; /* تقليل المسافة العلوية لأن الهيدر أصغر */
         }
         input, textarea, select {
             width: 90%;
@@ -94,8 +88,7 @@
         <h1>الجمـهورية الجزائـرية الديمقـراطية الشعـبية</h1>
         <h2>وزارة التجارة الداخلية وضبط السوق الوطنية</h2>
         <h3>المديرية العامة للرقابة الاقتصادية وقمع الغش</h3>
-        <p>مرحبًا، قدم انشغالك أو</p>
-        <img src="Nvert.png" alt="اتصل بالرقم 1020" class="call-image" id="callImage">
+        <p>مرحبًا، قدم انشغالك</p> <!-- إزالة الصورة -->
     </header>
 
     <div class="form-container">
@@ -107,7 +100,7 @@
                    required>
 
             <label for="phone">رقم الهاتف:</label>
-            <input type="tel" id="phone" name="phone" placeholder="0xxxxxxxxx" 
+            <input type="tel" id="phone" name="phone" placeholder="مثال: 07XXXXXXXX" 
                    pattern="0[5-7][0-9]{8}" 
                    title="يرجى إدخال رقم هاتف جزائري صحيح (10 أرقام تبدأ بـ 05، 06، أو 07)" 
                    required>
@@ -198,9 +191,7 @@
     <script>
         emailjs.init("nVPGHqM9IKHQ9ObVJ");
 
-        document.getElementById('callImage').addEventListener('click', function () {
-            window.location.href = 'tel:1020';
-        });
+       
 
         const stateEmails = {
             "أدرار": "adrar@commerce.dz",
