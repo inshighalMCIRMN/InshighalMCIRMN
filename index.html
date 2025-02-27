@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>واجهة تقديم الانشغالات</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        /* خلفية الصفحة */
         body {
             font-family: 'Arial', sans-serif;
             text-align: center;
@@ -16,74 +16,45 @@
             padding: 0;
             height: 100vh;
             display: flex;
-            flex-direction: column; /* جعل التخطيط عموديًا */
-            align-items: center; /* محاذاة العناصر أفقيًا */
+            flex-direction: column;
+            align-items: center;
         }
-
-        /* تنسيق الهيدر */
         header {
-            background-color: rgba(0, 0, 0, 0.6); /* خلفية داكنة شفافة */
+            background-color: rgba(0, 0, 0, 0.6);
             color: white;
             padding: 10px 5px;
             width: 90%;
             text-align: center;
-            position: fixed; /* إبقاء الهيدر في أعلى الصفحة */
+            position: fixed;
             top: 0;
-            left:30;
+            left: 30;
         }
-
-        /* تقليل حجم العناوين */
-        header h1 {
-            font-size: 16px;
-        }
-        header h2 {
-            font-size: 15px;
-        }
-        header h3 {
-            font-size: 14px;
-        }
-        header p {
-            font-size: 12px;
-            margin: 5px 0;
-        }
-
+        header h1 { font-size: 16px; }
+        header h2 { font-size: 15px; }
+        header h3 { font-size: 14px; }
+        header p { font-size: 12px; margin: 5px 0; }
         @media (max-width: 768px) {
-            header {
-                padding: 6px 2px; /* تقليل التباعد */
-            }
-            header h1 {
-                font-size: 16px;
-            }
-            header h2 {
-                font-size: 15px;
-            }
-            header h3 {
-                font-size: 14px;
-            }
-            header p {
-                font-size: 12px;
-            }
+            header { padding: 6px 2px; }
+            header h1 { font-size: 16px; }
+            header h2 { font-size: 15px; }
+            header h3 { font-size: 14px; }
+            header p { font-size: 12px; }
         }
-
         .call-image {
-           width: 120px;  /* تصغير العرض */
-           height: 70px; /* تصغير الارتفاع */
+           width: 120px;
+           height: 70px;
            cursor: pointer;
            margin-top: 5px;
         }
-
-        /* تنسيق الفورم */
         .form-container {
-            background: rgba(255, 255, 255, 0.85); /* خلفية بيضاء شفافة */
+            background: rgba(255, 255, 255, 0.85);
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
             width: 70%;
             max-width: 250px;
-            margin-top: 240px; /* إبعاد الفورم عن الهيدر */
+            margin-top: 240px;
         }
-
-        /* تنسيق المدخلات */
         input, textarea, select {
             width: 90%;
             padding: 6px;
@@ -94,15 +65,11 @@
             color: #333;
             font-size: 12px;
         }
-
-        /* تأثير عند التركيز */
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: #007bff;
             box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
         }
-
-        /* زر الإرسال */
         button {
             background-color: #0ea18e;
             color: white;
@@ -113,12 +80,7 @@
             font-size: 18px;
             width: 100%;
         }
-
-        button:hover {
-            background-color: #088e78;
-        }
-
-        /* إخفاء رسالة النجاح بشكل افتراضي */
+        button:hover { background-color: #088e78; }
         .success-message {
             display: none;
             color: green;
@@ -128,8 +90,6 @@
     </style>
 </head>
 <body>
-
-    <!-- الهيدر -->
     <header>
         <h1>الجمـهورية الجزائـرية الديمقـراطية الشعـبية</h1>
         <h2>وزارة التجارة الداخلية وضبط السوق الوطنية</h2>
@@ -138,114 +98,219 @@
         <img src="Nvert.png" alt="اتصل بالرقم 1020" class="call-image" id="callImage">
     </header>
 
-    <!-- الفورم -->
     <div class="form-container">
-        <form id="complaintForm" action="https://getform.io/f/amdkpngb" method="POST" enctype="multipart/form-data">
+        <form id="complaintForm">
             <label for="fullName">الاسم واللقب:</label>
-            <input type="text" id="fullName" name="fullName" placeholder="أدخل اسمك ولقبك" required>
+            <input type="text" id="fullName" name="fullName" placeholder="أدخل اسمك ولقبك" 
+                   pattern="[ء-ي\s]+" 
+                   title="يرجى إدخال حروف عربية فقط" 
+                   required>
 
             <label for="phone">رقم الهاتف:</label>
-            <input type="tel" id="phone" name="phone" placeholder="أدخل رقم هاتفك" required>
+            <input type="tel" id="phone" name="phone" placeholder="0xxxxxxxxx" 
+                   pattern="0[5-7][0-9]{8}" 
+                   title="يرجى إدخال رقم هاتف جزائري صحيح (10 أرقام تبدأ بـ 05، 06، أو 07)" 
+                   required>
 
             <label for="email">البريد الإلكتروني:</label>
-            <input type="email" id="email" name="email" placeholder="أدخل بريدك الإلكتروني" required>
+            <input type="email" id="email" name="email" placeholder="أدخل بريدك الإلكتروني" 
+                   pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
+                   title="يرجى إدخال بريد إلكتروني صحيح (مثل example@domain.com)" 
+                   required>
             
             <label for="state">الولاية:</label>
             <select id="state" name="state" required>
                 <option value="">اختر ولايتك</option>
-                <option value="01">أدرار</option>
-                <option value="02">الشلف</option>
-                <option value="03">الأغواط</option>
-                <option value="04">أم البواقي</option>
-                <option value="05">باتنة</option>
-                <option value="06">بجاية</option>
-                <option value="07">بسكرة</option>
-                <option value="08">بشار</option>
-                <option value="09">البليدة</option>
-                <option value="10">البويرة</option>
-                <option value="11">تمنراست</option>
-                <option value="12">تبسة</option>
-                <option value="13">تلمسان</option>
-                <option value="14">تيارت</option>
-                <option value="15">تيزي وزو</option>
-                <option value="16">الجزائر</option>
-                <option value="17">الجلفة</option>
-                <option value="18">جيجل</option>
-                <option value="19">سطيف</option>
-                <option value="20">سعيدة</option>
-                <option value="21">سكيكدة</option>
-                <option value="22">سيدي بلعباس</option>
-                <option value="23">عنابة</option>
-                <option value="24">قالمة</option>
-                <option value="25">قسنطينة</option>
-                <option value="26">المدية</option>
-                <option value="27">مستغانم</option>
-                <option value="28">المسيلة</option>
-                <option value="29">معسكر</option>
-                <option value="30">ورقلة</option>
-                <option value="31">وهران</option>
-                <option value="32">البيض</option>
-                <option value="33">إليزي</option>
-                <option value="34">برج بوعريريج</option>
-                <option value="35">بومرداس</option>
-                <option value="36">الطارف</option>
-                <option value="37">تندوف</option>
-                <option value="38">تيسمسيلت</option>
-                <option value="39">الوادي</option>
-                <option value="40">خنشلة</option>
-                <option value="41">سوق أهراس</option>
-                <option value="42">تيبازة</option>
-                <option value="43">ميلة</option>
-                <option value="44">عين الدفلى</option>
-                <option value="45">النعامة</option>
-                <option value="46">عين تموشنت</option>
-                <option value="47">غرداية</option>
-                <option value="48">غليزان</option>
-                <option value="49">تيميمون</option>
-                <option value="50">برج باجي مختار</option>
-                <option value="51">أولاد جلال</option>
-                <option value="52">بني عباس</option>
-                <option value="53">إن صالح</option>
-                <option value="54">إن قزام</option>
-                <option value="55">تقرت</option>
-                <option value="56">جانت</option>
-                <option value="57">المغير</option>
-                <option value="58">المنيعة</option>
+                <option value="أدرار">أدرار</option>
+                <option value="الشلف">الشلف</option>
+                <option value="الأغواط">الأغواط</option>
+                <option value="أم البواقي">أم البواقي</option>
+                <option value="باتنة">باتنة</option>
+                <option value="بجاية">بجاية</option>
+                <option value="بسكرة">بسكرة</option>
+                <option value="بشار">بشار</option>
+                <option value="البليدة">البليدة</option>
+                <option value="البويرة">البويرة</option>
+                <option value="تمنراست">تمنراست</option>
+                <option value="تبسة">تبسة</option>
+                <option value="تلمسان">تلمسان</option>
+                <option value="تيارت">تيارت</option>
+                <option value="تيزي وزو">تيزي وزو</option>
+                <option value="الجزائر">الجزائر</option>
+                <option value="الجلفة">الجلفة</option>
+                <option value="جيجل">جيجل</option>
+                <option value="سطيف">سطيف</option>
+                <option value="سعيدة">سعيدة</option>
+                <option value="سكيكدة">سكيكدة</option>
+                <option value="سيدي بلعباس">سيدي بلعباس</option>
+                <option value="عنابة">عنابة</option>
+                <option value="قالمة">قالمة</option>
+                <option value="قسنطينة">قسنطينة</option>
+                <option value="المدية">المدية</option>
+                <option value="مستغانم">مستغانم</option>
+                <option value="المسيلة">المسيلة</option>
+                <option value="معسكر">معسكر</option>
+                <option value="ورقلة">ورقلة</option>
+                <option value="وهران">وهران</option>
+                <option value="البيض">البيض</option>
+                <option value="إليزي">إليزي</option>
+                <option value="برج بوعريريج">برج بوعريريج</option>
+                <option value="بومرداس">بومرداس</option>
+                <option value="الطارف">الطارف</option>
+                <option value="تندوف">تندوف</option>
+                <option value="تيسمسيلت">تيسمسيلت</option>
+                <option value="الوادي">الوادي</option>
+                <option value="خنشلة">خنشلة</option>
+                <option value="سوق أهراس">سوق أهراس</option>
+                <option value="تيبازة">تيبازة</option>
+                <option value="ميلة">ميلة</option>
+                <option value="عين الدفلى">عين الدفلى</option>
+                <option value="النعامة">النعامة</option>
+                <option value="عين تموشنت">عين تموشنت</option>
+                <option value="غرداية">غرداية</option>
+                <option value="غليزان">غليزان</option>
+                <option value="تيميمون">تيميمون</option>
+                <option value="برج باجي مختار">برج باجي مختار</option>
+                <option value="أولاد جلال">أولاد جلال</option>
+                <option value="بني عباس">بني عباس</option>
+                <option value="إن صالح">إن صالح</option>
+                <option value="إن قزام">إن قزام</option>
+                <option value="تقرت">تقرت</option>
+                <option value="جانت">جانت</option>
+                <option value="المغير">المغير</option>
+                <option value="المنيعة">المنيعة</option>
             </select>
     
             <label for="municipality">البلدية:</label>
-            <input type="text" id="municipality" name="municipality" placeholder="أدخل بلديتك" required>
+            <input type="text" id="municipality" name="municipality" placeholder="أدخل بلديتك" 
+                   pattern="[ء-ي\s]+" 
+                   title="يرجى إدخال حروف عربية فقط" 
+                   required>
 
             <label for="description">وصف الانشغال:</label>
             <textarea id="description" name="description" placeholder="اكتب وصفًا دقيقًا للانشغال" rows="5" required></textarea>
             
-            <label for="media">أضف صورة أو فيديو (اختياري):</label>
-            <input type="file" id="media" name="media" accept="image/*, video/*">
-
             <button type="submit">إرسال</button>
         </form>
         <p class="success-message" id="successMessage">تم الإرسال بنجاح، ستنظر مصالح التجارة في انشغالك</p>
     </div>
 
     <script>
-        // جعل الصورة قابلة للنقر للاتصال بالرقم 1020 مباشرةً
+        emailjs.init("nVPGHqM9IKHQ9ObVJ");
+
         document.getElementById('callImage').addEventListener('click', function () {
             window.location.href = 'tel:1020';
         });
 
-        // عرض رسالة النجاح بعد إرسال النموذج
-        document.getElementById('complaintForm').addEventListener('submit', function (event) {
-            event.preventDefault(); // منع إرسال النموذج الافتراضي
+        const stateEmails = {
+            "أدرار": "adrar@commerce.dz",
+            "الشلف": "chlef@commerce.dz",
+            "الأغواط": "dgcerf@gmail.com",
+            "أم البواقي": "adrar@commerce.dz",
+            "باتنة": "chlef@commerce.dz",
+            "بجاية": "dgcerf@gmail.com",
+            "بسكرة": "adrar@commerce.dz",
+            "بشار": "chlef@commerce.dz",
+            "البليدة": "dgcerf@gmail.com",
+            "البويرة": "adrar@commerce.dz",
+            "تمنراست": "chlef@commerce.dz",
+            "تبسة": "dgcerf@gmail.com",
+            "تلمسان": "adrar@commerce.dz",
+            "تيارت": "chlef@commerce.dz",
+            "تيزي وزوز": "dgcerf@gmail.com",
+            "أدرار": "adrar@commerce.dz",
+            "الجزائر": "dgcerf@gmail.com",
+            "الجلفة": "chlef@commerce.dz",
+            "جيجل": "dgcerf@gmail.com",
+            "سطيف": "adrar@commerce.dz",
+            "سعيدة": "chlef@commerce.dz",
+            "سكيكدة": "dgcerf@gmail.com",
+            "سيدي بلعباس": "adrar@commerce.dz",
+            "عنابة": "chlef@commerce.dz",
+            "قالمة": "dgcerf@gmail.com",
+            "قسنطينة": "adrar@commerce.dz",
+            "المدية": "chlef@commerce.dz",
+            "مستغانم": "dgcerf@gmail.com",
+            "المسيلة": "adrar@commerce.dz",
+            "معسكر": "chlef@commerce.dz",
+            "ورقلة": "dgcerf@gmail.com",
+            "وهران": "adrar@commerce.dz",
+            "البيض": "chlef@commerce.dz",
+            "إليزي": "dgcerf@gmail.com",
+            "برج بوعريريج": "adrar@commerce.dz",
+            "بومرداس": "chlef@commerce.dz",
+            "الطارف": "dgcerf@gmail.com",
+            "تندوف": "adrar@commerce.dz",
+            "تيسمسيلت": "chlef@commerce.dz",
+            "الوادي": "dgcerf@gmail.com",
+            "خنشلة": "adrar@commerce.dz",
+            "سوق أهراس": "chlef@commerce.dz",
+            "تيبازة": "dgcerf@gmail.com",
+            "ميلة": "adrar@commerce.dz",
+            "عين الدفلى": "chlef@commerce.dz",
+            "النعامة": "dgcerf@gmail.com",
+            "عين تموشنت": "adrar@commerce.dz",
+            "غرداية": "chlef@commerce.dz",
+            "غليزان": "dgcerf@gmail.com",
+            "تيميمون": "adrar@commerce.dz",
+            "برج باجي مختار": "chlef@commerce.dz",
+            "أولاد جلال": "dgcerf@gmail.com",
+            "بني عباس": "adrar@commerce.dz",
+            "إن صالح": "chlef@commerce.dz",
+            "إن قزام": "dgcerf@gmail.com",
+            "تقرت": "chlef@commerce.dz",
+            "جانت": "dgcerf@gmail.com",
+            "المغير": "adrar@commerce.dz",
+            "المنيعة": "chlef@commerce.dz"
 
-            // عرض رسالة النجاح
+        };
+
+        document.getElementById('complaintForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
             document.getElementById('successMessage').style.display = 'block';
 
-            // إرسال النموذج برمجيًا
-            setTimeout(function () {
-                document.getElementById('complaintForm').submit();
-            }, 2000); // تأخير الإرسال لرؤية الرسالة
+            const formData = new FormData(this);
+            const state = formData.get('state');
+            const fixedEmail = "inshighalmcirmn@gmail.com";
+            const stateEmail = stateEmails[state] || "default@commerce.dz";
+
+            let reportNumber = localStorage.getItem('reportNumber') || 0;
+            reportNumber = parseInt(reportNumber) + 1;
+            localStorage.setItem('reportNumber', reportNumber);
+
+            const now = new Date();
+            const dateTime = now.toLocaleString('ar-DZ', { 
+                year: 'numeric', 
+                month: 'numeric', 
+                day: 'numeric', 
+                hour: 'numeric', 
+                minute: 'numeric', 
+                second: 'numeric' 
+            });
+
+            const emailParams = {
+                fullName: formData.get('fullName'),
+                phone: formData.get('phone'),
+                email: formData.get('email'),
+                state: state,
+                municipality: formData.get('municipality'),
+                description: formData.get('description'),
+                reportNumber: reportNumber,
+                dateTime: dateTime,
+                to_email: fixedEmail + "," + stateEmail
+            };
+
+            emailjs.send("service_su5ml39", "template_1yro6fl", emailParams)
+                .then(function () {
+                    console.log('تم الإرسال بنجاح إلى كلا البريدين!');
+                    setTimeout(() => {
+                        document.getElementById('successMessage').style.display = 'none';
+                    }, 2000);
+                }, function (error) {
+                    console.log('فشل الإرسال:', error);
+                });
         });
     </script>
-
 </body>
 </html>
