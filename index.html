@@ -6,7 +6,6 @@
     <title>واجهة تقديم الانشغالات</title>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="module">
-        // الكود الخاص بـ JavaScript كما هو دون تغيير
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
         import { getFirestore, collection, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
@@ -96,6 +95,7 @@
             event.preventDefault();
             console.log("تم منع الإرسال الافتراضي");
 
+            // التحقق من الموافقة على الشروط
             const termsAccepted = document.getElementById('terms').checked;
             if (!termsAccepted) {
                 alert("يجب الموافقة على شروط التطبيق وسياسة الخصوصية لإرسال التقرير.");
@@ -237,8 +237,7 @@
             padding: 20px 3mm;
             width: 100%;
             text-align: center;
-            position: fixed; /* يثبت الهيدر في الأعلى */
-            top: 0;
+            position: relative;
             z-index: 1000;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             box-sizing: border-box;
@@ -259,7 +258,6 @@
             overflow: hidden;
             white-space: nowrap;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            margin-top: 90px; /* مسافة بعد الهيدر الثابت */
             margin-bottom: 10px;
         }
 
@@ -279,8 +277,8 @@
         }
 
         @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+            100% { transform: translateX(100%); }
         }
 
         #newsTicker:hover #tickerContent {
@@ -294,29 +292,27 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             width: 90%;
             max-width: 350px;
-            margin: 120px auto 20px; /* رفع الحاوية للأعلى */
-            max-height: 70vh; /* حد أقصى للارتفاع ليناسب شاشة الهاتف */
-            overflow-y: auto; /* تمرير إذا زاد الطول */
+            margin: 100px auto 20px;
             z-index: 1;
         }
 
         label {
             display: block;
             text-align: right;
-            margin-bottom: 6px; /* تقليل المسافة بين العناصر */
-            font-size: 14px; /* تقليل حجم النص */
+            margin-bottom: 8px;
+            font-size: 16px;
             color: #333;
         }
 
         input, textarea, select {
             width: 100%;
-            padding: 8px; /* تقليل الحشوة */
-            margin-bottom: 10px; /* تقليل المسافة بين الحقول */
+            padding: 10px;
+            margin-bottom: 12px;
             border: 2px solid #f09041;
             border-radius: 8px;
             background: rgba(255, 255, 255, 1);
             color: #333;
-            font-size: 12px; /* تقليل حجم النص */
+            font-size: 14px;
             direction: rtl;
             box-sizing: border-box;
         }
@@ -330,16 +326,13 @@
         button {
             background-color: #0ea18e;
             color: white;
-            padding: 10px 20px; /* تقليل الحشوة */
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px; /* تقليل حجم النص */
+            font-size: 18px;
             width: 100%;
             transition: background-color 0.3s;
-            position: sticky; /* تثبيت الزر في أسفل الحاوية */
-            bottom: 0;
-            z-index: 10;
         }
 
         button:hover {
@@ -357,52 +350,56 @@
             border-radius: 5px;
             display: none;
             z-index: 1000;
-            font-size: 14px;
+            
         }
 
-        /* تحسين التوافق مع شاشات الهاتف */
         @media (max-width: 768px) {
             header h1, header h2, header h3 {
                 font-size: 16px;
             }
+
             #newsTicker {
                 font-size: 14px;
                 padding: 8px;
-                margin-top: 80px;
             }
+
             .form-container {
-                margin-top: 110px; /* رفع أكثر على شاشات أكبر */
+                margin-top: 80px;
                 padding: 12px;
-                max-height: 65vh; /* تقليل الارتفاع */
+                width: 85%;
+                max-width: 320px;
             }
-            label { font-size: 13px; }
-            input, textarea, select { font-size: 11px; padding: 7px; }
-            button { font-size: 15px; padding: 9px; }
+
+            label { font-size: 14px; }
+            input, textarea, select { font-size: 12px; padding: 8px; }
+            button { font-size: 16px; padding: 10px; }
         }
 
         @media (max-width: 480px) {
             header {
                 padding: 15px 3mm;
             }
+
             header h1, header h2, header h3 {
                 font-size: 14px;
             }
+
             #newsTicker {
                 font-size: 12px;
                 padding: 6px;
-                margin-top: 70px;
             }
+
             .form-container {
-                margin-top: 100px; /* رفع الحاوية للأعلى */
+                margin-top: 60px;
                 padding: 10px;
-                max-height: 60vh; /* تقليل الارتفاع لشاشات صغيرة */
                 width: 90%;
                 max-width: 280px;
             }
-            label { font-size: 12px; margin-bottom: 5px; }
-            input, textarea, select { font-size: 10px; padding: 6px; margin-bottom: 8px; }
+
+            label { font-size: 12px; margin-bottom: 6px; }
+            input, textarea, select { font-size: 10px; padding: 6px; margin-bottom: 10px; }
             button { font-size: 14px; padding: 8px; }
-            .success-message { font-size: 12px; padding: 12px; }
+            .success-message { font-size: 14px; }
         }
     </style>
 </head>
@@ -506,14 +503,14 @@
                    required>
 
             <label for="description">وصف الانشغال:</label>
-            <textarea id="description" name="description" placeholder="اكتب وصفًا دقيقًا للانشغال" rows="4" required></textarea>
+            <textarea id="description" name="description" placeholder="اكتب وصفًا دقيقًا للانشغال" rows="5" required></textarea>
 
             <label for="media">إرفاق صور أو فيديوهات (اختياري):</label>
             <input type="file" id="media" name="media" accept="image/*,video/*" multiple>
 
-            <div style="margin-bottom: 10px; text-align: right;">
+            <div style="margin-bottom: 12px; text-align: right;">
                 <input type="checkbox" id="terms" name="terms" required>
-                <label for="terms" style="display: inline; font-size: 12px;">
+                <label for="terms" style="display: inline; font-size: 14px;">
                     أوافق على إرسال بياناتي وألتزم 
                     <a href="privacy-policy.html" target="_blank" style="color: #007bff;">بشروط التطبيق وسياسة الخصوصية</a>
                 </label>
