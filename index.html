@@ -87,9 +87,16 @@
 
         const toBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
+            reader.onload = () => {
+                const result = reader.result;
+                if (typeof result === 'string' && result.startsWith('data:')) {
+                    resolve(result.split(',')[1]);
+                } else {
+                    reject(new Error("فشل في تحويل الملف إلى Base64."));
+                }
+            };
+            reader.onerror = () => reject(new Error("خطأ في قراءة الملف."));
             reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
         });
 
         async function checkLocationPermission() {
@@ -243,6 +250,22 @@
             }
         }
 
+        function validateFileExtension(file) {
+            const extension = file.name.split('.').pop().toLowerCase();
+            const mimeToExt = {
+                'image/jpeg': ['jpg', 'jpeg'],
+                'image/png': ['png'],
+                'image/gif': ['gif'],
+                'image/webp': ['webp'],
+                'image/heic': ['heic'],
+                'video/mp4': ['mp4'],
+                'video/webm': ['webm'],
+                'video/quicktime': ['mov']
+            };
+            const allowedExts = mimeToExt[file.type] || [];
+            return allowedExts.includes(extension);
+        }
+
         document.getElementById('complaintForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             console.log("بدء معالجة النموذج");
@@ -257,25 +280,38 @@
                 return;
             }
 
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm'];
+            const allowedTypes = [
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic',
+                'video/mp4', 'video/webm', 'video/quicktime'
+            ];
+
             for (const file of files) {
                 if (file.size > 0) {
+                    // التحقق من نوع الملف
                     if (!allowedTypes.includes(file.type)) {
-                        alert("نوع الملف غير مدعوم. يُسمح فقط بالصور (JPEG, PNG, GIF) والفيديوهات (MP4, WebM).");
+                        alert(`نوع الملف غير مدعوم: ${file.name}. يُسمح فقط بالصور (JPEG, PNG, GIF, WEBP, HEIC) والفيديوهات (MP4, WebM, MOV).`);
                         return;
                     }
+                    // التحقق من تطابق الامتداد مع نوع MIME
+                    if (!validateFileExtension(file)) {
+                        alert(`امتداد الملف (${file.name}) لا يتطابق مع نوعه. تأكد من أن الملف لم يتم التلاعب به.`);
+                        return;
+                    }
+                    // التحقق من الحجم
                     if (file.size > 32 * 1024 * 1024) {
-                        alert("الملف كبير جدًا، الحد الأقصى 32 ميجابايت.");
+                        alert(`الملف كبير جدًا: ${file.name}. الحد الأقصى 32 ميجابايت.`);
                         return;
                     }
                     if (file.size < 1024) {
-                        alert("الملف صغير جدًا أو فارغ، يجب أن يكون الحجم 1 كيلوبايت على الأقل.");
+                        alert(`الملف صغير جدًا أو فارغ: ${file.name}. الحد الأدنى 1 كيلوبايت.`);
                         return;
                     }
+                    // التحقق من سلامة الملف
                     try {
                         await toBase64(file);
                     } catch (error) {
-                        alert("الملف تالف أو غير صالح: " + file.name);
+                        alert(`فشل في قراءة الملف: ${file.name}. قد يكون الملف تالفًا أو غير صالح.`);
+                        console.error("خطأ في تحويل الملف:", error);
                         return;
                     }
                 }
@@ -316,10 +352,12 @@
                         if (result.success) {
                             const imageUrl = result.data.url || result.data.display_url || result.data.image?.url || result.data.medium?.url || result.data.thumb?.url;
                             if (imageUrl) mediaUrls.push(imageUrl);
+                        } else {
+                            throw new Error("فشل في رفع الملف إلى ImgBB.");
                         }
                     } catch (error) {
                         console.error("خطأ في رفع الملف:", error);
-                        alert("حدث خطأ أثناء رفع الملف: " + file.name);
+                        alert(`حدث خطأ أثناء رفع الملف: ${file.name}. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.`);
                         successMessage.style.display = 'none';
                         return;
                     }
