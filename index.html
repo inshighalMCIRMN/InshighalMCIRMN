@@ -99,32 +99,6 @@
             reader.readAsDataURL(file);
         });
 
-        async function getUserLocation() {
-            return new Promise((resolve, reject) => {
-                if (!navigator.geolocation) {
-                    alert("المتصفح لا يدعم خاصية تحديد الموقع. سيتم استخدام إحداثيات افتراضية.");
-                    resolve({ latitude: 0, longitude: 0 });
-                    return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        console.log("إحداثيات الموقع:", position.coords);
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        });
-                    },
-                    (error) => {
-                        console.error("فشل الحصول على الموقع:", error);
-                        alert("فشل الحصول على الموقع. تأكد من منح التطبيق صلاحيات الوصول إلى الموقع.");
-                        resolve({ latitude: 0, longitude: 0 });
-                    },
-                    { timeout: 15000, maximumAge: 0, enableHighAccuracy: true }
-                );
-            });
-        }
-
         function validateFileExtension(file) {
             const extension = file.name.split('.').pop().toLowerCase();
             const mimeToExt = {
@@ -151,19 +125,17 @@
 
             formInitialized = true;
 
-            // التحقق من اتصال الإنترنت
             if (!navigator.onLine) {
                 alert("التطبيق غير متصل بالإنترنت. يرجى التحقق من اتصالك.");
             }
 
-            // التحقق من صلاحيات الوصول إلى الكاميرا ومعرض الصور
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 alert("المتصفح لا يدعم الوصول إلى الكاميرا أو معرض الصور.");
             } else {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                     console.log("تم منح صلاحيات الوصول إلى الكاميرا.");
-                    stream.getTracks().forEach(track => track.stop()); // إيقاف الكاميرا بعد التحقق
+                    stream.getTracks().forEach(track => track.stop());
                 } catch (error) {
                     console.error("فشل في الحصول على صلاحيات الوصول:", error);
                     alert("يجب منح التطبيق صلاحيات الوصول إلى الكاميرا ومعرض الصور.");
@@ -229,18 +201,6 @@
                         }
                     }
 
-                    let latitude, longitude;
-                    try {
-                        const location = await getUserLocation();
-                        latitude = location.latitude;
-                        longitude = location.longitude;
-                        console.log("الإحداثيات المرسلة:", { latitude, longitude });
-                    } catch (error) {
-                        console.error("فشل الحصول على الإحداثيات:", error);
-                        latitude = 0;
-                        longitude = 0;
-                    }
-
                     const successMessage = document.getElementById('successMessage');
                     successMessage.style.display = 'block';
 
@@ -288,8 +248,6 @@
                         reportNumber: reportNumber,
                         dateTime: new Date().toLocaleString('ar-DZ'),
                         mediaUrls: mediaUrls.length > 0 ? mediaUrls.join('\n') : "لا توجد روابط متاحة",
-                        latitude: latitude,
-                        longitude: longitude,
                         to_email: fixedEmail + "," + stateEmail
                     };
 
@@ -363,32 +321,8 @@
                 });
             }
 
-            // اختبار الشريط ببيانات وهمية
-            function testTickerWithMockData() {
-                console.log("اختبار الشريط ببيانات وهمية...");
-                const tickerContent = document.getElementById('tickerContent');
-                if (!tickerContent) {
-                    console.error("عنصر #tickerContent غير موجود في DOM!");
-                    return;
-                }
-
-                const mockData = [
-                    { title: "اختبار 1", message: "هذا إشعار وهمي 1", link: "https://example.com" },
-                    { title: "اختبار 2", message: "هذا إشعار وهمي 2", link: "https://example.com" }
-                ];
-
-                let content = '';
-                mockData.forEach(data => {
-                    content += `<a href="${data.link}" target="_blank">${data.title} - ${data.message}</a>`;
-                });
-                tickerContent.innerHTML = content;
-                console.log("تم تحديث الشريط ببيانات وهمية:", content);
-            }
-
-            // التأكد من تهيئة DOM قبل استدعاء الدوال
             console.log("DOM جاهز، جارٍ استدعاء الدوال...");
             fetchNotifications();
-            // testTickerWithMockData(); // قم بإلغاء التعليق لهذا السطر إذا أردت اختبار الشريط ببيانات وهمية
         });
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@200..800&display=swap" rel="stylesheet">
@@ -547,135 +481,4 @@
         @media (max-width: 768px) {
             header h1, header h2, header h3 { font-size: 16px; }
             #newsTicker { font-size: 14px; padding: 8px; }
-            .form-container { margin-top: 80px; padding: 12px; width: 85%; max-width: 320px; }
-            label { font-size: 14px; }
-            input, textarea, select { font-size: 12px; padding: 8px; }
-            button { font-size: 16px; padding: 10px; }
-            .internal-notification { top: 110px; }
-        }
-
-        @media (max-width: 480px) {
-            header { padding: 15px 3mm; }
-            header h1, header h2, header h3 { font-size: 14px; }
-            #newsTicker { font-size: 12px; padding: 6px; }
-            .form-container { margin-top: 60px; padding: 10px; width: 90%; max-width: 280px; }
-            label { font-size: 12px; margin-bottom: 6px; }
-            input, textarea, select { font-size: 10px; padding: 6px; margin-bottom: 10px; }
-            button { font-size: 14px; padding: 8px; }
-            .success-message { font-size: 14px; }
-            .internal-notification { top: 100px; padding: 8px 15px; font-size: 12px; }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>الجمـهورية الجزائـرية الديمقـراطية الشعـبية</h1>
-        <h2>وزارة التجارة الداخلية وضبط السوق الوطنية</h2>
-        <h3>المديرية العامة للرقابة الاقتصادية وقمع الغش</h3>
-        <div id="newsTicker">
-            <span id="tickerContent">جارٍ التحميل...</span>
-        </div>
-    </header>
-
-    <div class="form-container">
-        <form id="complaintForm" enctype="multipart/form-data">
-            <label for="fullName">الاسم واللقب:</label>
-            <input type="text" id="fullName" name="fullName" placeholder="أدخل اسمك ولقبك" 
-                   pattern="[ء-ي\s]+" 
-                   title="يرجى إدخال حروف عربية فقط" 
-                   required>
-
-            <label for="phone">رقم الهاتف:</label>
-            <input type="tel" id="phone" name="phone" placeholder="0XXXXXXXXXX" 
-                   pattern="0[5-7][0-9]{8}" 
-                   title="يرجى إدخال رقم هاتف جزائري صحيح (10 أرقام تبدأ بـ 05، 06، أو 07)" 
-                   required>
-
-            <label for="email">البريد الإلكتروني:</label>
-            <input type="email" id="email" name="email" placeholder="أدخل بريدك الإلكتروني" 
-                   pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
-                   title="يرجى إدخال بريد إلكتروني صحيح (مثل example@domain.com)" 
-                   required>
-            
-            <label for="state">الولاية:</label>
-            <select id="state" name="state" required>
-                <option value="">اختر ولايتك</option>
-                <option value="أدرار">أدرار</option>
-                <option value="الشلف">الشلف</option>
-                <option value="الأغواط">الأغواط</option>
-                <option value="أم البواقي">أم البواقي</option>
-                <option value="باتنة">باتنة</option>
-                <option value="بجاية">بجاية</option>
-                <option value="بسكرة">بسكرة</option>
-                <option value="بشار">بشار</option>
-                <option value="البليدة">البليدة</option>
-                <option value="البويرة">البويرة</option>
-                <option value="تمنراست">تمنراست</option>
-                <option value="تبسة">تبسة</option>
-                <option value="تلمسان">تلمسان</option>
-                <option value="تيارت">تيارت</option>
-                <option value="تيزي وزو">تيزي وزو</option>
-                <option value="الجزائر">الجزائر</option>
-                <option value="الجلفة">الجلفة</option>
-                <option value="جيجل">جيجل</option>
-                <option value="سطيف">سطيف</option>
-                <option value="سعيدة">سعيدة</option>
-                <option value="سكيكدة">سكيكدة</option>
-                <option value="سيدي بلعباس">سيدي بلعباس</option>
-                <option value="عنابة">عنابة</option>
-                <option value="قالمة">قالمة</option>
-                <option value="قسنطينة">قسنطينة</option>
-                <option value="المدية">المدية</option>
-                <option value="مستغانم">مستغانم</option>
-                <option value="المسيلة">المسيلة</option>
-                <option value="معسكر">معسكر</option>
-                <option value="ورقلة">ورقلة</option>
-                <option value="وهران">وهران</option>
-                <option value="البيض">البيض</option>
-                <option value="إليزي">إليزي</option>
-                <option value="برج بوعريريج">برج بوعريريج</option>
-                <option value="بومرداس">بومرداس</option>
-                <option value="الطارف">الطارف</option>
-                <option value="تندوف">تندوف</option>
-                <option value="تيسمسيلت">تيسمسيلت</option>
-                <option value="الوادي">الوادي</option>
-                <option value="خنشلة">خنشلة</option>
-                <option value="سوق أهراس">سوق أهراس</option>
-                <option value="تيبازة">تيبازة</option>
-                <option value="ميلة">ميلة</option>
-                <option value="عين الدفلى">عين الدفلى</option>
-                <option value="النعامة">النعامة</option>
-                <option value="عين تموشنت">عين تموشنت</option>
-                <option value="غرداية">غرداية</option>
-                <option value="غليزان">غليزان</option>
-                <option value="تيميمون">تيميمون</option>
-                <option value="برج باجي مختار">برج باجي مختار</option>
-                <option value="أولاد جلال">أولاد جلال</option>
-                <option value="بني عباس">بني عباس</option>
-                <option value="إن صالح">إن صالح</option>
-                <option value="إن قزام">إن قزام</option>
-                <option value="تقرت">تقرت</option>
-                <option value="جانت">جانت</option>
-                <option value="المغير">المغير</option>
-                <option value="المنيعة">المنيعة</option>
-                <option value="آفلو">آفلو</option>
-            </select>
-    
-            <label for="municipality">البلدية:</label>
-            <input type="text" id="municipality" name="municipality" placeholder="أدخل بلديتك" 
-                   pattern="[ء-ي\s]+" 
-                   title="يرجى إدخال حروف عربية فقط" 
-                   required>
-
-            <label for="description">وصف الانشغال:</label>
-            <textarea id="description" name="description" placeholder="اكتب وصفًا دقيقًا للانشغال" rows="5" required></textarea>
-
-            <label for="media">إرفاق صور أو فيديوهات (اختياري):</label>
-            <input type="file" id="media" name="media" accept="image/*,video/*" multiple>
-            
-            <button type="submit">إرسال</button>
-        </form>
-        <p class="success-message" id="successMessage">تم الإرسال بنجاح، ستنظر مصالح التجارة في انشغالك</p>
-    </div>
-</body>
-</html>
+            .form-container { margin-top
