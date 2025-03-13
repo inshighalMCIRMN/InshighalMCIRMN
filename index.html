@@ -7,15 +7,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-        import { getFirestore, collection, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import { getFirestore, collection, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAM-op2MBQjm00Nwo-eD0wxf8V1sdG5X8s",
             authDomain: "inshighalmcirmn-3037f.firebaseapp.com",
             projectId: "inshighalmcirmn-3037f",
-            storageBucket: "inshighalmcirmn-3037f.firebasestorage.app",
+            storageBucket: "inshighalmcirmn-3037f.appspot.com",
             messagingSenderId: "109645536978",
-            appId: "G-V9M0MP9N0M"
+            appId: "1:109645536978:web:1234567890abcdef"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -102,8 +102,8 @@
         async function getUserLocation() {
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
-                    console.warn("التطبيق لا يدعم خاصية تحديد الموقع، سيتم استخدام إحداثيات افتراضية.");
-                    resolve({ latitude: 0, longitude: 0 }); // إحداثيات افتراضية إذا لم يكن هناك دعم
+                    alert("المتصفح لا يدعم خاصية تحديد الموقع. سيتم استخدام إحداثيات افتراضية.");
+                    resolve({ latitude: 0, longitude: 0 });
                     return;
                 }
 
@@ -117,7 +117,8 @@
                     },
                     (error) => {
                         console.error("فشل الحصول على الموقع:", error);
-                        resolve({ latitude: 0, longitude: 0 }); // استخدام إحداثيات افتراضية في حالة الفشل
+                        alert("فشل الحصول على الموقع. تأكد من منح التطبيق صلاحيات الوصول إلى الموقع.");
+                        resolve({ latitude: 0, longitude: 0 });
                     },
                     { timeout: 15000, maximumAge: 0, enableHighAccuracy: true }
                 );
@@ -142,13 +143,32 @@
 
         let formInitialized = false;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (formInitialized) {
                 console.log("النموذج تم تهيئته بالفعل، لن يتم إعادة التهيئة.");
                 return;
             }
 
             formInitialized = true;
+
+            // التحقق من اتصال الإنترنت
+            if (!navigator.onLine) {
+                alert("التطبيق غير متصل بالإنترنت. يرجى التحقق من اتصالك.");
+            }
+
+            // التحقق من صلاحيات الوصول إلى الكاميرا ومعرض الصور
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("المتصفح لا يدعم الوصول إلى الكاميرا أو معرض الصور.");
+            } else {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    console.log("تم منح صلاحيات الوصول إلى الكاميرا.");
+                    stream.getTracks().forEach(track => track.stop()); // إيقاف الكاميرا بعد التحقق
+                } catch (error) {
+                    console.error("فشل في الحصول على صلاحيات الوصول:", error);
+                    alert("يجب منح التطبيق صلاحيات الوصول إلى الكاميرا ومعرض الصور.");
+                }
+            }
 
             const complaintForm = document.getElementById('complaintForm');
             if (complaintForm) {
@@ -218,7 +238,7 @@
                     } catch (error) {
                         console.error("فشل الحصول على الإحداثيات:", error);
                         latitude = 0;
-                        longitude = 0; // استخدام إحداثيات افتراضية في حالة الفشل
+                        longitude = 0;
                     }
 
                     const successMessage = document.getElementById('successMessage');
@@ -289,6 +309,7 @@
             }
 
             function showNotification(title, message) {
+                console.log("إظهار إشعار منبثق:", { title, message });
                 const notificationDiv = document.createElement('div');
                 notificationDiv.className = 'internal-notification';
                 notificationDiv.innerHTML = `<strong>${title}</strong><br>${message}`;
@@ -299,12 +320,20 @@
             }
 
             function fetchNotifications() {
+                console.log("بدء جلب الإشعارات من Firestore...");
                 const notificationsRef = collection(db, "notifications");
                 const tickerContent = document.getElementById('tickerContent');
-                let isInitialLoad = true;
+                if (!tickerContent) {
+                    console.error("عنصر #tickerContent غير موجود في DOM!");
+                    return;
+                }
 
-                onSnapshot(query(notificationsRef, orderBy("timestamp", "desc")), (snapshot) => {
+                onSnapshot(notificationsRef, (snapshot) => {
+                    console.log("تم استلام لقطة من Firestore:", snapshot);
+                    console.log("عدد الوثائق:", snapshot.docs.length);
+
                     if (snapshot.empty) {
+                        console.warn("لا توجد وثائق في مجموعة 'notifications'");
                         tickerContent.innerHTML = 'لا توجد إشعارات متاحة حاليًا';
                         return;
                     }
@@ -312,30 +341,54 @@
                     let content = '';
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        if (data.title && data.message && data.link) {
-                            content += `<a href="${data.link}" target="_blank">${data.title} - ${data.message}</a>`;
-                        }
-                    });
-                    tickerContent.innerHTML = content || 'لا توجد إشعارات متاحة حاليًا';
+                        console.log("بيانات الوثيقة:", data);
 
-                    if (!isInitialLoad) {
-                        snapshot.docChanges().forEach((change) => {
-                            if (change.type === "added") {
-                                const data = change.doc.data();
-                                if (data.title && data.message) {
-                                    showNotification("إشعار جديد", `${data.title} - ${data.message}`);
-                                }
-                            }
-                        });
+                        const title = data.title || "عنوان غير متوفر";
+                        const message = data.message || "رسالة غير متوفرة";
+                        const link = data.link || "#";
+
+                        content += `<a href="${link}" target="_blank">${title} - ${message}</a>`;
+                    });
+
+                    if (content) {
+                        tickerContent.innerHTML = content;
+                        console.log("تم تحديث الشريط بالإشعارات:", content);
+                    } else {
+                        tickerContent.innerHTML = 'لا توجد إشعارات صالحة للعرض';
+                        console.warn("لا توجد إشعارات صالحة بعد التصفية");
                     }
-                    isInitialLoad = false;
                 }, (error) => {
-                    console.error("خطأ في جلب الإشعارات:", error);
+                    console.error("خطأ في جلب الإشعارات:", error.message);
                     tickerContent.innerHTML = 'فشل في تحميل الإشعارات، تحقق من الاتصال أو تكوين Firebase.';
                 });
             }
 
+            // اختبار الشريط ببيانات وهمية
+            function testTickerWithMockData() {
+                console.log("اختبار الشريط ببيانات وهمية...");
+                const tickerContent = document.getElementById('tickerContent');
+                if (!tickerContent) {
+                    console.error("عنصر #tickerContent غير موجود في DOM!");
+                    return;
+                }
+
+                const mockData = [
+                    { title: "اختبار 1", message: "هذا إشعار وهمي 1", link: "https://example.com" },
+                    { title: "اختبار 2", message: "هذا إشعار وهمي 2", link: "https://example.com" }
+                ];
+
+                let content = '';
+                mockData.forEach(data => {
+                    content += `<a href="${data.link}" target="_blank">${data.title} - ${data.message}</a>`;
+                });
+                tickerContent.innerHTML = content;
+                console.log("تم تحديث الشريط ببيانات وهمية:", content);
+            }
+
+            // التأكد من تهيئة DOM قبل استدعاء الدوال
+            console.log("DOM جاهز، جارٍ استدعاء الدوال...");
             fetchNotifications();
+            // testTickerWithMockData(); // قم بإلغاء التعليق لهذا السطر إذا أردت اختبار الشريط ببيانات وهمية
         });
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@200..800&display=swap" rel="stylesheet">
