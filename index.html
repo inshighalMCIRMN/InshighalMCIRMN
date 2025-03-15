@@ -85,13 +85,6 @@
             "آفلو": "ddcwaflou@gmail.com"
         };
 
-        const toBase64 = (file) => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = () => reject(new Error("خطأ في قراءة الملف."));
-            reader.readAsDataURL(file);
-        });
-
         async function getUserLocation() {
             return new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(
@@ -109,27 +102,10 @@
             event.preventDefault();
 
             const formData = new FormData(this);
-            const files = formData.getAll('media');
             const location = await getUserLocation();
 
             const successMessage = document.getElementById('successMessage');
             successMessage.style.display = 'block';
-
-            let mediaUrls = [];
-            for (const file of files) {
-                try {
-                    const base64String = await toBase64(file);
-                    const apiKey = "8598ff9232542b73b8272a6a4aa048bb";
-                    const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-                        method: "POST",
-                        body: new URLSearchParams({image: base64String})
-                    });
-                    const result = await response.json();
-                    if (result.success) mediaUrls.push(result.data.url);
-                } catch (error) {
-                    console.error("خطأ في رفع الملف:", error);
-                }
-            }
 
             const emailParams = {
                 fullName: formData.get('fullName'),
@@ -139,9 +115,8 @@
                 municipality: formData.get('municipality'),
                 description: formData.get('description'),
                 dateTime: new Date().toLocaleString('ar-DZ'),
-                mediaUrls: mediaUrls.join('\n') || "لا توجد مرفقات",
-                latitude: location.latitude,
-                longitude: location.longitude,
+                latitude: location.latitude || "غير متوفر",
+                longitude: location.longitude || "غير متوفر",
                 to_email: `inshighalmcirmn@gmail.com,${stateEmails[formData.get('state')] || "default@commerce.dz"}`
             };
 
@@ -309,13 +284,6 @@
             transition: opacity 0.5s;
         }
 
-        input[type="file"] {
-            border: 2px dashed #0ea18e;
-            padding: 15px;
-            background: #f8f9fa;
-            cursor: pointer;
-        }
-
         @media (max-width: 768px) {
             .form-container {
                 width: 85%;
@@ -365,9 +333,6 @@
 
             <label for="description">وصف الانشغال:</label>
             <textarea id="description" name="description" rows="4" required></textarea>
-
-            <label for="media">إرفاق ملفات (اختياري):</label>
-            <input type="file" id="media" name="media" multiple>
 
             <button type="submit">إرسال الانشغال</button>
         </form>
