@@ -85,22 +85,12 @@
             "آفلو": "ddcwaflou@gmail.com"
         };
 
-        // دالة للحصول على الإحداثيات
         async function getCoordinates() {
             return new Promise((resolve, reject) => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const coords = {
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude
-                            };
-                            resolve(coords);
-                        },
-                        (error) => {
-                            console.error("خطأ في الحصول على الموقع:", error);
-                            reject("تعذر الحصول على الموقع: " + error.message);
-                        }
+                        (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+                        (error) => reject("تعذر الحصول على الموقع: " + error.message)
                     );
                 } else {
                     reject("المتصفح لا يدعم تحديد الموقع الجغرافي");
@@ -108,9 +98,36 @@
             });
         }
 
+        let isLocationEnabled = false;
+
+        // التحقق من حالة تحديد الموقع عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true; // تعطيل زر الإرسال افتراضيًا
+            submitButton.style.backgroundColor = '#ccc'; // لون رمادي للإشارة إلى التعطيل
+            submitButton.style.cursor = 'not-allowed';
+
+            // محاولة الحصول على الموقع تلقائيًا
+            getCoordinates()
+                .then(() => {
+                    isLocationEnabled = true;
+                    submitButton.disabled = false;
+                    submitButton.style.backgroundColor = '#0ea18e'; // لون الزر الطبيعي
+                    submitButton.style.cursor = 'pointer';
+                })
+                .catch(() => {
+                    isLocationEnabled = false;
+                });
+        });
+
         document.getElementById('complaintForm').addEventListener('submit', async function(event) {
             event.preventDefault();
-            console.log("تم منع الإرسال الافتراضي");
+
+            if (!isLocationEnabled) {
+                showNotification("خطأ", "من فضلك، افتح خاصية تحديد الموقع لضمان وصول انشغالك");
+                return;
+            }
+
             document.getElementById('successMessage').style.display = 'block';
 
             const formData = new FormData(this);
@@ -123,12 +140,8 @@
             localStorage.setItem('reportNumber', reportNumber);
 
             const now = new Date();
-            const dateTime = now.toLocaleString('ar-DZ', {
-                year: 'numeric', month: 'numeric', day: 'numeric',
-                hour: 'numeric', minute: 'numeric', second: 'numeric'
-            });
+            const dateTime = now.toLocaleString('ar-DZ', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
 
-            // الحصول على الإحداثيات
             let coordinates;
             try {
                 coordinates = await getCoordinates();
@@ -150,32 +163,21 @@
                 to_email: fixedEmail + "," + stateEmail
             };
 
-            console.log("البيانات المرسلة إلى EmailJS:", emailParams);
-
             emailjs.send("service_09oa41r", "template_zjtbspb", emailParams)
                 .then(() => {
                     console.log('تم الإرسال بنجاح!');
-                    setTimeout(() => {
-                        document.getElementById('successMessage').style.display = 'none';
-                    }, 2000);
-                }, (error) => {
-                    console.error('فشل الإرسال:', error);
-                });
+                    setTimeout(() => document.getElementById('successMessage').style.display = 'none', 2000);
+                }, (error) => console.error('فشل الإرسال:', error));
         });
 
-        // دالة لعرض الإشعار الداخلي
         function showNotification(title, message) {
             const notificationDiv = document.createElement('div');
             notificationDiv.className = 'internal-notification';
             notificationDiv.innerHTML = `<strong>${title}</strong><br>${message}`;
             document.body.appendChild(notificationDiv);
-
-            setTimeout(() => {
-                notificationDiv.remove();
-            }, 5000);
+            setTimeout(() => notificationDiv.remove(), 5000);
         }
 
-        // دالة لجلب الإشعارات مع تتبع الإضافات الجديدة
         function fetchNotifications() {
             const notificationsRef = collection(db, "notifications");
             const tickerContent = document.getElementById('tickerContent');
@@ -183,13 +185,10 @@
 
             onSnapshot(query(notificationsRef, orderBy("timestamp", "desc")), (snapshot) => {
                 let content = '';
-
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data.title && data.message && data.link) {
                         content += `<a href="${data.link}" target="_blank">${data.title} - ${data.message}</a>`;
-                    } else {
-                        console.warn("مستند ناقص:", doc.id, data);
                     }
                 });
                 tickerContent.innerHTML = content || 'لا توجد إشعارات حاليًا';
@@ -204,7 +203,6 @@
                         }
                     });
                 }
-
                 isInitialLoad = false;
             }, (error) => {
                 console.error("خطأ في جلب الإشعارات:", error);
@@ -237,7 +235,8 @@
             padding: 20px 3mm;
             width: 100%;
             text-align: center;
-            position: relative;
+            position: fixed;
+            top: 0;
             z-index: 1000;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             box-sizing: border-box;
@@ -258,12 +257,12 @@
             overflow: hidden;
             white-space: nowrap;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            margin-bottom: 10px;
+            margin-top: 10px;
         }
 
         #tickerContent {
             display: inline-block;
-            animation: marquee 60s linear infinite;
+            animation: marquee 50s linear infinite;
         }
 
         #tickerContent a {
@@ -292,8 +291,7 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             width: 90%;
             max-width: 350px;
-            margin: 100px auto 20px;
-            z-index: 1;
+            margin: 240px auto 20px;
         }
 
         label {
@@ -335,7 +333,12 @@
             transition: background-color 0.3s;
         }
 
-        button:hover {
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:not(:disabled):hover {
             background-color: #088e78;
         }
 
@@ -354,11 +357,11 @@
 
         .internal-notification {
             position: absolute;
-            top: 130px;
+            top: 260px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #ffcc00;
-            color: #000;
+            background-color: #ff4444; /* لون أحمر للخطأ */
+            color: #fff;
             padding: 10px 20px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
@@ -374,61 +377,87 @@
             100% { opacity: 0; visibility: hidden; }
         }
 
+        .nav-arrow {
+            position: fixed;
+            top: 165px;
+            z-index: 1000;
+            background-color: #0ea18e;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-arrow:hover {
+            background-color: #088e78;
+        }
+
+        .nav-arrow.right {
+            right: 20px;
+        }
+
+        .nav-arrow.left {
+            left: 20px;
+            display: none;
+        }
+
+        .nav-arrow::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: -30px;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .nav-arrow.right::after {
+            right: 0;
+        }
+
+        .nav-arrow.left::after {
+            left: 0;
+        }
+
+        .nav-arrow:hover::after {
+            opacity: 1;
+        }
+
         @media (max-width: 768px) {
-            header h1, header h2, header h3 {
-                font-size: 16px;
-            }
-
-            #newsTicker {
-                font-size: 14px;
-                padding: 8px;
-            }
-
-            .form-container {
-                margin-top: 80px;
-                padding: 12px;
-                width: 85%;
-                max-width: 320px;
-            }
-
+            header h1, header h2, header h3 { font-size: 16px; }
+            #newsTicker { font-size: 14px; padding: 8px; }
+            .form-container { margin-top: 230px; padding: 12px; width: 85%; max-width: 320px; }
             label { font-size: 14px; }
             input, textarea, select { font-size: 12px; padding: 8px; }
             button { font-size: 16px; padding: 10px; }
-            .internal-notification {
-                top: 110px;
-            }
+            .internal-notification { top: 250px; }
+            .nav-arrow { top: 165px; font-size: 14px; padding: 8px 12px; }
+            .nav-arrow::after { font-size: 10px; top: -25px; }
         }
 
         @media (max-width: 480px) {
-            header {
-                padding: 15px 3mm;
-            }
-
-            header h1, header h2, header h3 {
-                font-size: 14px;
-            }
-
-            #newsTicker {
-                font-size: 12px;
-                padding: 6px;
-            }
-
-            .form-container {
-                margin-top: 60px;
-                padding: 10px;
-                width: 90%;
-                max-width: 280px;
-            }
-
+            header { padding: 15px 3mm; }
+            header h1, header h2, header h3 { font-size: 14px; }
+            #newsTicker { font-size: 12px; padding: 6px; }
+            .form-container { margin-top: 220px; padding: 10px; width: 90%; max-width: 280px; }
             label { font-size: 12px; margin-bottom: 6px; }
             input, textarea, select { font-size: 10px; padding: 6px; margin-bottom: 10px; }
             button { font-size: 14px; padding: 8px; }
             .success-message { font-size: 14px; }
-            .internal-notification {
-                top: 100px;
-                padding: 8px 15px;
-                font-size: 12px;
-            }
+            .internal-notification { top: 240px; padding: 8px 15px; font-size: 12px; }
+            .nav-arrow { top: 165px; font-size: 12px; padding: 6px 10px; }
+            .nav-arrow::after { font-size: 8px; top: -20px; }
         }
     </style>
 </head>
@@ -442,26 +471,23 @@
         </div>
     </header>
 
+    <a href="external-services.html" class="nav-arrow right" data-tooltip="الانتقال إلى صفحة روابط الاتصال">مصالح الوزارة →</a>
+    <a href="#" class="nav-arrow left" data-tooltip="الصفحة السابقة غير متاحة">← الصفحة السابقة</a>
+
     <div class="form-container">
         <form id="complaintForm">
             <label for="fullName">الاسم واللقب:</label>
             <input type="text" id="fullName" name="fullName" placeholder="أدخل اسمك ولقبك" 
-                   pattern="[ء-ي\s]+" 
-                   title="يرجى إدخال حروف عربية فقط" 
-                   required>
+                   pattern="[ء-ي\s]+" title="يرجى إدخال حروف عربية فقط" required>
 
             <label for="phone">رقم الهاتف:</label>
             <input type="tel" id="phone" name="phone" placeholder="0XXXXXXXXXX" 
-                   pattern="0[5-7][0-9]{8}" 
-                   title="يرجى إدخال رقم هاتف جزائري صحيح (10 أرقام تبدأ بـ 05، 06، أو 07)" 
-                   required>
+                   pattern="0[5-7][0-9]{8}" title="يرجى إدخال رقم هاتف جزائري صحيح" required>
 
             <label for="email">البريد الإلكتروني:</label>
             <input type="email" id="email" name="email" placeholder="أدخل بريدك الإلكتروني" 
-                   pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
-                   title="يرجى إدخال بريد إلكتروني صحيح (مثل example@domain.com)" 
-                   required>
-            
+                   pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="يرجى إدخال بريد إلكتروني صحيح" required>
+
             <label for="state">الولاية:</label>
             <select id="state" name="state" required>
                 <option value="">اختر ولايتك</option>
@@ -528,15 +554,12 @@
 
             <label for="municipality">البلدية:</label>
             <input type="text" id="municipality" name="municipality" placeholder="أدخل اسم البلدية" 
-                   pattern="[ء-ي\s]+" 
-                   title="يرجى إدخال حروف عربية فقط" 
-                   required>
+                   pattern="[ء-ي\s]+" title="يرجى إدخال حروف عربية فقط" required>
 
             <label for="description">وصف الانشغال:</label>
-            <textarea id="description" name="description" placeholder="اكتب تفاصيل انشغالك هنا" 
-                      rows="4" required></textarea>
+            <textarea id="description" name="description" placeholder="اكتب تفاصيل انشغالك هنا" rows="4" required></textarea>
 
-            <button type="submit">إرسال الانشغال</button>
+            <button type="submit" id="submitButton">إرسال الانشغال</button>
         </form>
     </div>
 
