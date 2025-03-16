@@ -99,26 +99,35 @@
         }
 
         let isLocationEnabled = false;
+        const submitButton = document.getElementById('submitButton');
 
-        // التحقق من حالة تحديد الموقع عند تحميل الصفحة
+        // تعطيل الزر افتراضيًا عند تحميل الصفحة
         window.addEventListener('load', () => {
-            const submitButton = document.getElementById('submitButton');
-            submitButton.disabled = true; // تعطيل زر الإرسال افتراضيًا
-            submitButton.style.backgroundColor = '#ccc'; // لون رمادي للإشارة إلى التعطيل
+            submitButton.disabled = true;
+            submitButton.style.backgroundColor = '#ccc';
             submitButton.style.cursor = 'not-allowed';
+            checkLocationPermission(); // التحقق من حالة تحديد الموقع عند التحميل
+        });
 
-            // محاولة الحصول على الموقع تلقائيًا
+        // دالة للتحقق من حالة تحديد الموقع
+        function checkLocationPermission() {
             getCoordinates()
                 .then(() => {
                     isLocationEnabled = true;
                     submitButton.disabled = false;
-                    submitButton.style.backgroundColor = '#0ea18e'; // لون الزر الطبيعي
+                    submitButton.style.backgroundColor = '#0ea18e';
                     submitButton.style.cursor = 'pointer';
                 })
                 .catch(() => {
                     isLocationEnabled = false;
+                    submitButton.disabled = true;
+                    submitButton.style.backgroundColor = '#ccc';
+                    submitButton.style.cursor = 'not-allowed';
                 });
-        });
+        }
+
+        // مراقبة تغيير حالة تحديد الموقع بشكل دوري
+        setInterval(checkLocationPermission, 2000); // التحقق كل ثانيتين
 
         document.getElementById('complaintForm').addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -146,7 +155,7 @@
             try {
                 coordinates = await getCoordinates();
             } catch (error) {
-                coordinates = { latitude: "غير متوفر", longitude: "غير متوفر" };
+                coordinates = { latitude: "غير متوفر", longitude: "غير متوفر" }; // لن يصل إلى هنا لأن الزر معطل إذا لم يكن الموقع مفعلاً
             }
 
             const emailParams = {
@@ -171,6 +180,9 @@
         });
 
         function showNotification(title, message) {
+            const existingNotification = document.querySelector('.internal-notification');
+            if (existingNotification) existingNotification.remove(); // إزالة أي إشعار موجود
+
             const notificationDiv = document.createElement('div');
             notificationDiv.className = 'internal-notification';
             notificationDiv.innerHTML = `<strong>${title}</strong><br>${message}`;
@@ -276,8 +288,8 @@
         }
 
         @keyframes marquee {
-            100% { transform: translateX(100%); }
-            100% { transform: translateX(100%); }
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
         }
 
         #newsTicker:hover #tickerContent {
@@ -366,7 +378,7 @@
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             z-index: 1001;
-            animation: fadeOut 7s forwards;
+            animation: fadeOut 5s forwards;
             max-width: 90%;
             text-align: center;
         }
